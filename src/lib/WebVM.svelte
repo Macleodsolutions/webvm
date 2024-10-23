@@ -319,7 +319,7 @@
 		readData('\r');
 		readData("cd data");
 		readData('\r');
-		readData("file --uncompress toolbar.blend");
+		readData("file --uncompress " + file.name);
 		readData('\r');
 
         // Notify the user
