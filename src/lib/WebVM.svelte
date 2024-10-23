@@ -313,14 +313,14 @@
         // Write the file to the DataDevice
         await dataDevice.writeFile(fileName, new Uint8Array(arrayBuffer));
 
-		cx.write("cd ..");
-		cx.write('\r');
-		cx.write("cd ..");
-		cx.write('\r');
-		cx.write("cd data");
-		cx.write('\r');
-		cx.write("file --uncompress toolbar.blend");
-		cx.write('\r');
+		readData("cd ..");
+		readData('\r');
+		readData("cd ..");
+		readData('\r');
+		readData("cd data");
+		readData('\r');
+		readData("file --uncompress toolbar.blend");
+		readData('\r');
 
         // Notify the user
         console.log(`File ${file.name} uploaded successfully.`);
