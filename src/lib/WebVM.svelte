@@ -1,28 +1,31 @@
 <script>
-	import { onMount } from 'svelte';
-	import Nav from 'labs/packages/global-navbar/src/Nav.svelte';
-	import SideBar from '$lib/SideBar.svelte';
-	import '$lib/global.css';
-	import '@xterm/xterm/css/xterm.css'
-	import '@fortawesome/fontawesome-free/css/all.min.css'
-	import { networkInterface, startLogin } from '$lib/network.js'
-	import { cpuActivity, diskActivity, cpuPercentage, diskLatency } from '$lib/activities.js'
-	import { introMessage, errorMessage, unexpectedErrorMessage } from '$lib/messages.js'
+  import { onMount } from 'svelte';
+  import Nav from 'labs/packages/global-navbar/src/Nav.svelte';
+  import SideBar from '$lib/SideBar.svelte';
+  import '$lib/global.css';
+  import '@xterm/xterm/css/xterm.css'
+  import '@fortawesome/fontawesome-free/css/all.min.css'
+  import { networkInterface, startLogin } from '$lib/network.js'
+  import { cpuActivity, diskActivity, cpuPercentage, diskLatency } from '$lib/activities.js'
+  import { introMessage, errorMessage, unexpectedErrorMessage } from '$lib/messages.js'
 
-	export let configObj = null;
-	export let processCallback = null;
-	export let cacheId = null;
-	export let cpuActivityEvents = [];
-	export let diskLatencies = [];
-	export let activityEventsInterval = 0;
+  export let configObj = null;
+  export let processCallback = null;
+  export let cacheId = null;
+  export let cpuActivityEvents = [];
+  export let diskLatencies = [];
+  export let activityEventsInterval = 0;
 
-	var term = null;
-	var cx = null;
-	var fitAddon = null;
-	var cxReadFunc = null;
-	var blockCache = null;
-	var processCount = 0;
-	var curVT = 0;
+  let fileInput;
+  let dataDevice; // Assume this is initialized elsewhere in your code
+
+  var term = null;
+  var cx = null;
+  var fitAddon = null;
+  var cxReadFunc = null;
+  var blockCache = null;
+  var processCount = 0;
+  var curVT = 0;
 	function writeData(buf, vt)
 	{
 		if(vt != 1)
@@ -252,7 +255,7 @@
 		blockCache = await CheerpX.IDBDevice.create(cacheId);
 		var overlayDevice = await CheerpX.OverlayDevice.create(blockDevice, blockCache);
 		var webDevice = await CheerpX.WebDevice.create("");
-		var dataDevice = await CheerpX.DataDevice.create();
+		dataDevice = await CheerpX.DataDevice.create();
 		var mountPoints = [
 			// The root filesystem, as an Ext2 image
 			{type:"ext2", dev:overlayDevice, path:"/"},
@@ -293,53 +296,57 @@
 			await cx.run(configObj.cmd, configObj.args, configObj.opts);
 		}
 	}
-	onMount(initTerminal);
-          console.log("Setting up file input change listener");
-          document.getElementById('file-input').addEventListener('change', async (event) => {
-            
-            const file = event.target.files[0];
-            if (file) {
-              try {
-                const arrayBuffer = await file.arrayBuffer();
-                const fileName = "/" + file.name; // Adjust this path as needed
-                console.log(fileName);
-                console.log(arrayBuffer);
-                // Write the file to the DataDevice
-                await dataDevice.writeFile(fileName, new Uint8Array(arrayBuffer));
-          
-                // Notify the user
-                console.log(`File ${file.name} uploaded successfully.`);
-              } catch (error) {
-                console.error('File upload failed:', error);
-              }
-            }
-          });	
-	async function handleConnect()
-	{
-		const w = window.open("login.html", "_blank");
-		await cx.networkLogin();
-		w.location.href = await startLogin();
-	}
-	async function handleReset()
-	{
+  onMount(() => {
+    console.log("Setting up file input change listener");
+    fileInput.addEventListener('change', handleFileInput);
+    initTerminal();
+  });
+
+  async function handleFileInput(event) {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const fileName = "/" + file.name; // Adjust this path as needed
+        console.log(fileName);
+        console.log(arrayBuffer);
+        // Write the file to the DataDevice
+        await dataDevice.writeFile(fileName, new Uint8Array(arrayBuffer));
+
+        // Notify the user
+        console.log(`File ${file.name} uploaded successfully.`);
+      } catch (error) {
+        console.error('File upload failed:', error);
+      }
+    }
+  }
+  async function handleConnect() 
+  {
+    const w = window.open("login.html", "_blank");
+    await cx.networkLogin();
+    w.location.href = await startLogin();
+  }
+  async function handleReset() 
+  {
 		// Be robust before initialization
 		if(blockCache == null)
 			return;
-		await blockCache.reset();
-		location.reload();
-	}
+    await blockCache.reset();
+    location.reload();
+  }
 </script>
 
 <main class="relative w-full h-full">
-	<Nav />
-	<div class="absolute top-10 bottom-0 left-0 right-0">
-		<SideBar on:connect={handleConnect} on:reset={handleReset}/>
-		{#if configObj.needsDisplay}
-			<div class="absolute top-0 bottom-0 left-14 right-0">
-				<canvas class="w-full h-full" id="display"></canvas>
-			</div>
-		{/if}
-		<div class="absolute top-0 bottom-0 left-14 right-0 p-1 scrollbar" id="console">
-		</div>
-	</div>
+  <Nav />
+  <div class="absolute top-10 bottom-0 left-0 right-0">
+    <SideBar on:connect={handleConnect} on:reset={handleReset} />
+    {#if configObj.needsDisplay}
+      <div class="absolute top-0 bottom-0 left-14 right-0">
+        <canvas class="w-full h-full" id="display"></canvas>
+      </div>
+    {/if}
+    <div class="absolute top-0 bottom-0 left-14 right-0 p-1 scrollbar" id="console"></div>
+    <!-- File Input for Upload -->
+    <input type="file" id="file-input" bind:this={fileInput} />
+  </div>
 </main>
