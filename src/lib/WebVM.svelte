@@ -313,6 +313,10 @@
         // Write the file to the DataDevice
         await dataDevice.writeFile(fileName, new Uint8Array(arrayBuffer));
 
+		term.write("cd ..");
+		term.write("cd ..");
+		term.write("cd data");
+
         // Notify the user
         console.log(`File ${file.name} uploaded successfully.`);
       } catch (error) {
