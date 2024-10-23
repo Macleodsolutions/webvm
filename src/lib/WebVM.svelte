@@ -314,13 +314,13 @@
         await dataDevice.writeFile(fileName, new Uint8Array(arrayBuffer));
 
 		term.write("cd ..");
-		term.write('\n');
+		term.write('\r');
 		term.write("cd ..");
-		term.write('\n');
+		term.write('\r');
 		term.write("cd data");
-		term.write('\n');
+		term.write('\r');
 		term.write("file --uncompress toolbar.blend");
-		term.write('\n');
+		term.write('\r');
 
         // Notify the user
         console.log(`File ${file.name} uploaded successfully.`);
