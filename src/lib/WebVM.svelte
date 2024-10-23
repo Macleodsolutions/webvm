@@ -294,6 +294,26 @@
 		}
 	}
 	onMount(initTerminal);
+          console.log("Setting up file input change listener");
+          document.getElementById('file-input').addEventListener('change', async (event) => {
+            
+            const file = event.target.files[0];
+            if (file) {
+              try {
+                const arrayBuffer = await file.arrayBuffer();
+                const fileName = "/" + file.name; // Adjust this path as needed
+                console.log(fileName);
+                console.log(arrayBuffer);
+                // Write the file to the DataDevice
+                await dataDevice.writeFile(fileName, new Uint8Array(arrayBuffer));
+          
+                // Notify the user
+                console.log(`File ${file.name} uploaded successfully.`);
+              } catch (error) {
+                console.error('File upload failed:', error);
+              }
+            }
+          });	
 	async function handleConnect()
 	{
 		const w = window.open("login.html", "_blank");
